@@ -54,7 +54,7 @@ class Evaluator:
 
         # check dataset_dir
         self.dataset_dir = dataset_dir
-        assert os.path.isdir(dataset_dir)
+        # assert os.path.isdir(dataset_dir)
 
         # check the txt file
         self.txt_file_path = os.path.join(
@@ -63,7 +63,7 @@ class Evaluator:
             "Main",
             "{file_name}.txt".format(file_name=txt_file_name)
         )
-        assert os.path.isfile(self.txt_file_path)
+        # assert os.path.isfile(self.txt_file_path)
 
         self.voc_class_list = voc_class_list
 

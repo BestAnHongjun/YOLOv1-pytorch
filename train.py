@@ -11,7 +11,7 @@ sys.path.append(PROJECT_ROOT)
 
 import os.path
 import torch
-from model.model import YOLOv1
+from model.ResNet_YOLOv1 import ResNet_YOLOv1
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from utils.loss import YOLO_LOSS
@@ -37,7 +37,7 @@ batch_n = train_dataset.__len__() // batch_size
 train_DataLoader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 eval_DataLoader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-YOLO_net = YOLOv1().to(device)
+YOLO_net = ResNet_YOLOv1().to(device)
 loss_func = YOLO_LOSS(device)
 
 model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model", "autosave")

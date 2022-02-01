@@ -87,7 +87,7 @@ class VOC_DATASET(Dataset):
             class_list = VOC_CLASS
 
         # check dataset_dir
-        assert os.path.isdir(dataset_dir)
+        # assert os.path.isdir(dataset_dir)
 
         # check the txt file
         txt_file_path = os.path.join(
@@ -96,7 +96,7 @@ class VOC_DATASET(Dataset):
             "Main",
             "{file_name}.txt".format(file_name=txt_file_name)
         )
-        assert os.path.isfile(txt_file_path)
+        # assert os.path.isfile(txt_file_path)
 
         # initialize attributes
         self.transform = transform
@@ -152,7 +152,7 @@ class VOC_DATASET(Dataset):
 
         for filename in filename_list:
             # filename must be a number!
-            assert filename.isdigit()
+            # assert filename.isdigit()
 
             image_path = os.path.join(
                 dataset_dir,
@@ -165,8 +165,8 @@ class VOC_DATASET(Dataset):
                 "{file_name}.xml".format(file_name=filename)
             )
 
-            assert os.path.isfile(image_path)
-            assert os.path.isfile(xml_file_path)
+            # assert os.path.isfile(image_path)
+            # assert os.path.isfile(xml_file_path)
 
             self.data.append((xml_file_path, image_path))
 
