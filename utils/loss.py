@@ -1,6 +1,17 @@
+"""
+This file is under Apache License 2.0, see more details at https://www.apache.org/licenses/LICENSE-2.0
+Author: Coder.AN, contact at an.hongjun@foxmail.com
+Github: https://github.com/AnHongjun001/YOLOv1-pytorch
+"""
+
+import os
+import sys
+PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+sys.path.append(PROJECT_ROOT)
+
 import torch
 import torch.nn as nn
-from IOU import iou
+from utils.IOU import iou
 
 
 class YOLO_LOSS(nn.Module):
@@ -76,7 +87,7 @@ class YOLO_LOSS(nn.Module):
                         #   > 分类损失
                         class_pre = y_pre[batch_id, grid_i, grid_j, 10:]
                         class_true = torch.zeros(20, dtype=torch.float32).to(self.device)
-                        class_true[int(y_true[batch_id, grid_i, grid_j, 0])] = 1
+                        class_true[int(y_true[batch_id, grid_i, grid_j, 0]) - 1] = 1
                         loss += torch.pow(class_pre - class_true, 2).sum()
                     else:
                         # 该格子没有物体
@@ -93,8 +104,8 @@ class YOLO_LOSS(nn.Module):
 
 def test_loss():
     y_pre = torch.zeros((5, 7, 7, 30))
-    y_true = torch.zeros((5, 7, 7, 6))
-    loss_func = YOLO_LOSS()
+    y_true = torch.zeros((5, 7, 7, 8))
+    loss_func = YOLO_LOSS(device=torch.device("cpu"))
     loss = loss_func(y_pre, y_true)
     print(loss.item())
 

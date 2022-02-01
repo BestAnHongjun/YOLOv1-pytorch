@@ -1,6 +1,14 @@
 """
-Under GPL
+This file is under Apache License 2.0, see more details at https://www.apache.org/licenses/LICENSE-2.0
+Author: Coder.AN, contact at an.hongjun@foxmail.com
+Github: https://github.com/AnHongjun001/YOLOv1-pytorch
+
+Reference:
+[1]Code in method voc_aug.random_hsv_augmentation refers to code by 太阳花的小绿豆 at CSDN platform,
+see more detail at https://blog.csdn.net/qq_37541097/article/details/119478023,
+which is under CC 4.0 BY-SA License.
 """
+
 import cv2
 import numpy as np
 
@@ -16,7 +24,7 @@ class voc_aug:
         1. Random HSV augmentation
         2. Random Cropping augmentation
         3. Random Flipping augmentation
-        4. Random Noisy augmentation
+        4. Random Noise augmentation
         5. Random rotation or translation augmentation
 
     All the methods can adjust abundant arguments in the constructed function.
@@ -53,42 +61,42 @@ class voc_aug:
         # threshold of discard bbox
         self.bbox_threshold = 10
 
-    def __call__(self, annotation):
-        # Randomly HSV augment
+    def __call__(self, vdict):
+        # Random HSV augment
         random_num = np.random.random()
         if random_num < self.hsv_pro:
-            annotation = self.randomly_hsv_augmentation(annotation, self.h_gain, self.s_gain, self.v_gain)
+            vdict = self.random_hsv_augmentation(vdict, self.h_gain, self.s_gain, self.v_gain)
 
-        # Randomly crop image
+        # Random cropping augmentation
         random_num = np.random.random()
         if random_num < self.crop_pro:
-            annotation = self.randomly_crop_image(annotation, self.min_crop_rate, self.max_crop_rate)
+            vdict = self.random_cropping_augmentation(vdict, self.min_crop_rate, self.max_crop_rate)
 
-        # Randomly flip
-        annotation = self.randomly_flip_image(annotation, self.flip_pro)
+        # Random flipping augmentation
+        vdict = self.random_flipping_augmentation(vdict, self.flip_pro)
 
-        # Randomly noisy augment
+        # Random noise augmentation
         random_num = np.random.random()
         if random_num < self.noise_pro:
-            annotation = self.randomly_add_noise(annotation, self.min_snr, self.max_snr)
+            vdict = self.random_noise_augmentation(vdict, self.min_snr, self.max_snr)
 
-        # Randomly rotation augment or translation augment
+        # Random rotation augment or translation augment
         random_num = np.random.random()
         if random_num < self.rotate_or_trans_pro:
             random_num = np.random.random()
             if random_num < 0.5:
-                annotation = self.randomly_rotate_image(annotation, self.min_degree, self.max_degree)
+                vdict = self.random_rotation_augmentation(vdict, self.min_degree, self.max_degree)
             else:
-                annotation = self.randomly_translation_image(annotation, self.x_trans_rate, self.y_trans_rate)
+                vdict = self.random_translation_augmentation(vdict, self.x_trans_rate, self.y_trans_rate)
 
-        return annotation
+        return vdict
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
 
     @staticmethod
-    def randomly_hsv_augmentation(annotation, h_gain, s_gain, v_gain):
-        img = annotation.get("image")
+    def random_hsv_augmentation(vdict, h_gain, s_gain, v_gain):
+        img = vdict.get("image")
         r = np.random.uniform(-1, 1, 3) * [h_gain, s_gain, v_gain] + 1
         hue, sat, val = cv2.split(cv2.cvtColor(img, cv2.COLOR_RGB2HSV))
 
@@ -100,21 +108,21 @@ class voc_aug:
         img_hsv = cv2.merge((cv2.LUT(hue, lut_hue), cv2.LUT(sat, lut_sat), cv2.LUT(val, lut_val))).astype(np.uint8)
         aug_img = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2RGB)
 
-        annotation["image"] = aug_img
-        return annotation
+        vdict["image"] = aug_img
+        return vdict
 
     @staticmethod
-    def randomly_flip_image(annotation, flip_pro):
+    def random_flipping_augmentation(vdict, flip_pro):
         random_num = np.random.random()
         if random_num >= flip_pro:
-            return annotation
-        img = annotation.get("image")
+            return vdict
+        img = vdict.get("image")
         cx = img.shape[1] / 2.0
         img = cv2.flip(img, 1)
-        annotation["image"] = img
+        vdict["image"] = img
 
         objects = []
-        for ob in annotation.get("objects"):
+        for ob in vdict.get("objects"):
             bbox = ob.get("bbox")
             x_min, y_min, x_max, y_max = bbox
 
@@ -126,24 +134,24 @@ class voc_aug:
                 "class_id": ob.get("class_id"),
                 "bbox": (new_x_min, y_min, new_x_max, y_max)
             })
-        annotation["objects"] = objects
-        return annotation
+        vdict["objects"] = objects
+        return vdict
 
     @staticmethod
-    def randomly_add_noise(annotation, min_snr, max_snr):
+    def random_noise_augmentation(vdict, min_snr, max_snr):
         snr = (max_snr - min_snr) * np.random.random() + min_snr
-        img = annotation.get("image")
+        img = vdict.get("image")
         h, w, c = img.shape
         mask = np.random.choice([0, 1, 2], size=(h, w, 1), p=[snr, (1-snr)/2.0, (1-snr)/2.0])
         mask = np.repeat(mask, c, axis=2)
         img[mask == 1] = 255
         img[mask == 2] = 0
-        annotation["image"] = img
-        return annotation
+        vdict["image"] = img
+        return vdict
 
-    def randomly_crop_image(self, annotation, min_crop_rate, max_crop_rate):
+    def random_cropping_augmentation(self, vdict, min_crop_rate, max_crop_rate):
         crop_rate = (max_crop_rate - min_crop_rate) * np.random.random() + min_crop_rate
-        img = annotation.get("image")
+        img = vdict.get("image")
 
         new_height = int(img.shape[0] * crop_rate)
         new_width = int(img.shape[1] * crop_rate)
@@ -154,10 +162,10 @@ class voc_aug:
         left = int(np.random.random() * (img.shape[1] - new_width))
         right = int(min(left + new_width, img.shape[1]))
 
-        annotation["image"] = img[top:bottom, left:right]
+        vdict["image"] = img[top:bottom, left:right]
 
         objects = []
-        for ob in annotation.get("objects"):
+        for ob in vdict.get("objects"):
             bbox = ob.get("bbox")
             bbox = self.__cut_bbox(bbox, top, bottom, left, right)
             if bbox is None:
@@ -167,21 +175,21 @@ class voc_aug:
                 "class_id": ob.get("class_id"),
                 "bbox": bbox
             })
-        annotation["objects"] = objects
-        return annotation
+        vdict["objects"] = objects
+        return vdict
 
-    def randomly_rotate_image(self, annotation, min_degree, max_degree):
-        img = annotation.get("image")
+    def random_rotation_augmentation(self, vdict, min_degree, max_degree):
+        img = vdict.get("image")
         angle = (max_degree - min_degree) * np.random.random() + min_degree
         h, w, c = img.shape
         center = (h / 2.0, w / 2.0)
 
         matrix = cv2.getRotationMatrix2D(center, angle, 1.0)
         img = cv2.warpAffine(img, matrix, (w, h))
-        annotation["image"] = img
+        vdict["image"] = img
 
         objects = []
-        for ob in annotation.get("objects"):
+        for ob in vdict.get("objects"):
             bbox = ob.get("bbox")
             x_min, y_min, x_max, y_max = bbox
 
@@ -209,21 +217,21 @@ class voc_aug:
                 "class_id": ob.get("class_id"),
                 "bbox": bbox
             })
-        annotation["objects"] = objects
-        return annotation
+        vdict["objects"] = objects
+        return vdict
 
-    def randomly_translation_image(self, annotation, x_rate, y_rate):
-        img = annotation.get("image")
+    def random_translation_augmentation(self, vdict, x_rate, y_rate):
+        img = vdict.get("image")
 
         tx = ((x_rate[1] - x_rate[0]) * np.random.random() + x_rate[0]) * img.shape[1]
         ty = ((y_rate[1] - y_rate[0]) * np.random.random() + y_rate[0]) * img.shape[0]
 
         matrix = np.float32([[1, 0, tx], [0, 1, ty]])
         img = cv2.warpAffine(img, matrix, (img.shape[1], img.shape[0]))
-        annotation["image"] = img
+        vdict["image"] = img
 
         objects = []
-        for ob in annotation.get("objects"):
+        for ob in vdict.get("objects"):
             bbox = ob.get("bbox")
             x_min, y_min, x_max, y_max = bbox
 
@@ -238,8 +246,8 @@ class voc_aug:
                 "class_id": ob.get("class_id"),
                 "bbox": bbox
             })
-        annotation["objects"] = objects
-        return annotation
+        vdict["objects"] = objects
+        return vdict
 
     def __cut_bbox(self, bbox, top, bottom, left, right):
         threshold = self.bbox_threshold
@@ -260,9 +268,14 @@ class voc_aug:
 
 
 def test_voc_aug(filename):
-    from voc import VOC_CLASS
-    from transfrom.voc2vdict import voc2vdict
-    from tools.viz_bbox import viz_annotation
+    import os
+    import sys
+    PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..")
+    sys.path.append(PROJECT_ROOT)
+
+    from utils.dataset.voc import VOC_CLASS
+    from utils.dataset.transfrom.voc2vdict import voc2vdict
+    from utils.dataset.tools.viz_bbox import viz_vdict
     import matplotlib.pyplot as plt
 
     transform = voc2vdict()
@@ -270,27 +283,27 @@ def test_voc_aug(filename):
 
     xml_file_path = r"E:\dataset\PASCAL_VOC\VOC_2007_trainval\Annotations\{}.xml".format(filename)
     image_file_path = r"E:\dataset\PASCAL_VOC\VOC_2007_trainval\JPEGImages\{}.jpg".format(filename)
-    annotation = transform(xml_file_path, image_file_path, VOC_CLASS)
+    vdict = transform(xml_file_path, image_file_path, VOC_CLASS)
 
     plt.figure(figsize=(15, 10))
 
     plt.subplot(2, 2, 1)
     plt.title("src")
-    plt.imshow(annotation.get("image"))
+    plt.imshow(vdict.get("image"))
 
     plt.subplot(2, 2, 3)
     plt.title("src_bbox")
-    image_src_show = viz_annotation(annotation)
+    image_src_show = viz_vdict(vdict)
     plt.imshow(image_src_show)
 
     plt.subplot(2, 2, 2)
     plt.title("aug")
-    annotation_aug = augmentation(annotation)
-    plt.imshow(annotation_aug.get("image"))
+    vdict_aug = augmentation(vdict)
+    plt.imshow(vdict_aug.get("image"))
 
     plt.subplot(2, 2, 4)
     plt.title("aug_bbox")
-    image_aug_show = viz_annotation(annotation_aug)
+    image_aug_show = viz_vdict(vdict_aug)
     plt.imshow(image_aug_show)
 
     plt.show()

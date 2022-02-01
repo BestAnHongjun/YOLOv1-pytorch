@@ -1,14 +1,21 @@
 """
-This file is under
+This file is under Apache License 2.0, see more details at https://www.apache.org/licenses/LICENSE-2.0
+Author: Coder.AN, contact at an.hongjun@foxmail.com
+Github: https://github.com/AnHongjun001/YOLOv1-pytorch
 """
+
 import os
+import sys
+PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+sys.path.append(PROJECT_ROOT)
+
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from tools.viz_bbox import viz_yolo_ground_truth
-from transfrom.voc2vdict import voc2vdict
-from transfrom.vdict2yolo import vdict2yolo_v1
-from voc_aug import voc_aug
+from utils.dataset.tools.viz_bbox import viz_yolo_ground_truth
+from utils.dataset.transfrom.voc2vdict import voc2vdict
+from utils.dataset.transfrom.vdict2yolo import vdict2yolo_v1
+from utils.dataset.tools.voc_aug import voc_aug
 
 
 VOC_CLASS = [
