@@ -1,7 +1,7 @@
 """
 This file is under Apache License 2.0, see more details at https://www.apache.org/licenses/LICENSE-2.0
 Author: Coder.AN, contact at an.hongjun@foxmail.com
-Github: https://github.com/AnHongjun001/YOLOv1-pytorch
+Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 
 Reference:
 [1]Code in method voc_aug.random_hsv_augmentation refers to code by 太阳花的小绿豆 at CSDN platform,
