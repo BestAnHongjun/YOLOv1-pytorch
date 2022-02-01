@@ -32,16 +32,17 @@ eval_dataset = VOC_DATASET(
 
 batch_size = 8
 epoch_n = 105
-batch_n = train_dataset.__len__() // batch_size
+batch_n_train = train_dataset.__len__() // batch_size
+batch_n_eval = eval_dataset.__len__() // batch_size
 
-train_DataLoader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-eval_DataLoader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False)
+train_DataLoader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
+eval_DataLoader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 YOLO_net = ResNet_YOLOv1().to(device)
 loss_func = YOLO_LOSS(device)
 
 model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model", "autosave")
-log_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log2")
+log_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
 cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
 writer = SummaryWriter(log_dir=log_save_dir)
 n = 0
@@ -69,7 +70,7 @@ def train_one_epoch(model, epoch, optimizer, evaluator, best_ap, latesd_ap):
             epoch,
             epoch_n,
             batch,
-            batch_n,
+            batch_n_train,
             loss.item()
         ))
         writer.add_scalar('Train/Loss', loss.item(), n)
@@ -126,7 +127,7 @@ def train_one_epoch(model, epoch, optimizer, evaluator, best_ap, latesd_ap):
             epoch,
             epoch_n,
             batch,
-            batch_n
+            batch_n_eval
         ))
 
     m_ap, aps, recs, precs = evaluator.eval()
