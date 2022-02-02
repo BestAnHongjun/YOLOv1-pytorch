@@ -5,18 +5,14 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 """
 
 import os
-import sys
-PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(PROJECT_ROOT)
-
 import os.path
 import torch
-from model.VGG_YOLOv1 import VGG_YOLOv1
+from yolo.model.VGG_YOLOv1 import VGG_YOLOv1
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from utils.loss import YOLO_LOSS
-from utils.dataset.voc import VOC_DATASET, VOC_CLASS
-from utils.dataset.tools.voc_eval import Evaluator
+from yolo.utils.loss import YOLO_LOSS
+from yolo.utils.dataset.voc import VOC_DATASET, VOC_CLASS
+from yolo.utils.dataset.tools.voc_eval import Evaluator
 
 
 train_dataset = VOC_DATASET(
@@ -41,9 +37,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 YOLO_net = VGG_YOLOv1().to(device)
 loss_func = YOLO_LOSS(device)
 
-model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model", "autosave")
-log_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log")
-cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cache")
+model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../yolo/model", "autosave")
+log_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../log")
+cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../cache")
 writer = SummaryWriter(log_dir=log_save_dir)
 n = 0
 

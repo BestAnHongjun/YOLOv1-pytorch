@@ -6,16 +6,16 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 
 import os
 import sys
-PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
+PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..")
 sys.path.append(PROJECT_ROOT)
 
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from utils.dataset.tools.viz_bbox import viz_yolo_ground_truth
-from utils.dataset.transfrom.voc2vdict import voc2vdict
-from utils.dataset.transfrom.vdict2yolo import vdict2yolo_v1
-from utils.dataset.tools.voc_aug import voc_aug
+from yolo.utils.dataset.tools.viz_bbox import viz_yolo_ground_truth
+from yolo.utils.dataset.transfrom.voc2vdict import voc2vdict
+from yolo.utils.dataset.transfrom.vdict2yolo import vdict2yolo_v1
+from yolo.utils.dataset.tools.voc_aug import voc_aug
 
 
 VOC_CLASS = [

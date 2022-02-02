@@ -4,14 +4,9 @@ Author: Coder.AN, contact at an.hongjun@foxmail.com
 Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 """
 
-import os
-import sys
-PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-sys.path.append(PROJECT_ROOT)
-
 import torch
 import torch.nn as nn
-from utils.IOU import iou
+from yolo.utils.IOU import iou
 
 
 class YOLO_LOSS(nn.Module):

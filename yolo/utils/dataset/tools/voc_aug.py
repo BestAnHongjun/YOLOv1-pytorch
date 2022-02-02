@@ -268,14 +268,9 @@ class voc_aug:
 
 
 def test_voc_aug(filename):
-    import os
-    import sys
-    PROJECT_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..")
-    sys.path.append(PROJECT_ROOT)
-
-    from utils.dataset.voc import VOC_CLASS
-    from utils.dataset.transfrom.voc2vdict import voc2vdict
-    from utils.dataset.tools.viz_bbox import viz_vdict
+    from yolo.utils.dataset.voc import VOC_CLASS
+    from yolo.utils.dataset.transfrom.voc2vdict import voc2vdict
+    from yolo.utils.dataset.tools.viz_bbox import viz_vdict
     import matplotlib.pyplot as plt
 
     transform = voc2vdict()
