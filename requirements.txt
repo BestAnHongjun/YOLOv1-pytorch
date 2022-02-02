@@ -1,0 +1,9 @@
+pytorch
+torchvision
+torchaudio
+cudatoolkit=10.2
+
+matplotlib
+opencv-python
+opencv-contrib-python
+numpy
