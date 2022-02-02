@@ -1,2 +1,2 @@
 *.pth
-*.txt
+cache\*.txt
