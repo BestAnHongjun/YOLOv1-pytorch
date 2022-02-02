@@ -13,7 +13,7 @@ class ResNet_YOLOv1(nn.Module):
     def __init__(self):
         super(ResNet_YOLOv1, self).__init__()
 
-        # Layer 1-4 (Use ResNet50 instead)
+        # Layer 1-4 (Use ResNet18 instead)
         resnet18 = models.resnet18(pretrained=True)
         self.feature = nn.Sequential(*list(resnet18.children())[:-2])
 

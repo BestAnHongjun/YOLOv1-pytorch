@@ -2,6 +2,11 @@
 This file is under Apache License 2.0, see more details at https://www.apache.org/licenses/LICENSE-2.0
 Author: Coder.AN, contact at an.hongjun@foxmail.com
 Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
+
+Reference:
+[1]Code in function __viz_bbox refers to code by Ge Zheng et al. in project YOLO-X,
+see more detail at https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/utils/visualize.py,
+which is under Apache License 2.0.
 """
 
 import cv2

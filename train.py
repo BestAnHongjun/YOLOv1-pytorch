@@ -11,7 +11,7 @@ sys.path.append(PROJECT_ROOT)
 
 import os.path
 import torch
-from model.ResNet_YOLOv1 import ResNet_YOLOv1
+from model.VGG_YOLOv1 import VGG_YOLOv1
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from utils.loss import YOLO_LOSS
@@ -38,7 +38,7 @@ batch_n_eval = eval_dataset.__len__() // batch_size
 train_DataLoader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
 eval_DataLoader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-YOLO_net = ResNet_YOLOv1().to(device)
+YOLO_net = VGG_YOLOv1().to(device)
 loss_func = YOLO_LOSS(device)
 
 model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "model", "autosave")
@@ -159,11 +159,11 @@ def train():
         best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
 
     optimizer = torch.optim.SGD(YOLO_net.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e-4)
-    for epoch in range(1, 76):
+    for epoch in range(1, 400):
         best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
 
     optimizer = torch.optim.SGD(YOLO_net.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
-    for epoch in range(76, 500):
+    for epoch in range(400, 500):
         best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
 
 

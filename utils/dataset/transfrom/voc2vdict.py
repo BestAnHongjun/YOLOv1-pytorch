@@ -11,7 +11,7 @@ import xml.dom.minidom as xml
 
 class voc2vdict:
     """
-    A transformer which can convert VOC format data to "annotation" format dict.
+    A transformer which can convert VOC format data to VOC-dict (vdict) format.
     """
     def __init__(self):
         pass
@@ -30,9 +30,9 @@ class voc2vdict:
                 ...
             ]
 
-        :return: An "annotation" format dict. For example:
+        :return: An VOC-dict (vdict) format dict. For example:
 
-            annotation = {
+            vdict = {
                 "image": numpy.array([[[....]]]),   # Cv2 image Mat. (Shape:[h, w, 3], RGB format)
                 "filename": 000048,                 # filename without suffix
                 "objects": [{                       # A list of dicts representing b-boxes
@@ -53,19 +53,19 @@ class voc2vdict:
         image = cv2.imread(image_file_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
 
-        # initialize annotation
-        annotation = dict()
-        annotation["image"] = image
+        # initialize vdict
+        vdict = dict()
+        vdict["image"] = image
 
         # parse xml file
         xml_file = xml.parse(xml_file_path)
         xml_elements = xml_file.documentElement
 
         # filename
-        annotation["filename"] = xml_elements.getElementsByTagName("filename")[0].firstChild.data.split(".")[0]
+        vdict["filename"] = xml_elements.getElementsByTagName("filename")[0].firstChild.data.split(".")[0]
 
         # objects
-        annotation["objects"] = list()
+        vdict["objects"] = list()
         all_object_elements = xml_elements.getElementsByTagName("object")
         for object_element in all_object_elements:
             object_class_name = object_element.getElementsByTagName("name")[0].firstChild.data
@@ -78,12 +78,12 @@ class voc2vdict:
                 int(float(object_bbox_element.getElementsByTagName("xmax")[0].firstChild.data)), \
                 int(float(object_bbox_element.getElementsByTagName("ymax")[0].firstChild.data))
 
-            annotation["objects"].append({
+            vdict["objects"].append({
                 "class_name": object_class_name,
                 "class_id": object_class_id,
                 "bbox": object_bbox
             })
-        return annotation
+        return vdict
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
