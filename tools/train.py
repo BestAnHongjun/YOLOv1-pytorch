@@ -42,7 +42,7 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
 
         format_str = "[{}] [best-mAP:{:.4f} | latest-mAP:{:.4f}] Train Epoch:{} Batch:{}/{} Loss:{:5f}"
         print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_train, loss.item()))
-        writer.add_scalar('{}/Global/Loss (train)'.format(name), loss.item(), batch_id)
+        writer.add_scalar('Global/Loss (train)', loss.item(), batch_id)
 
     # eval
     model.eval()
@@ -70,30 +70,24 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
         print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_eval))
 
     latest_ap, aps, recs, precs = evaluator.eval()
-    writer.add_scalar('{}/Global/mAP (eval)'.format(name), latest_ap, epoch_id)
+    writer.add_scalar('Global/mAP (eval)', latest_ap, epoch_id)
     for cls_id in range(len(aps)):
-        writer.add_scalar('{}/AP/{}'.format(name, class_list[cls_id + 1]), aps[cls_id], epoch_id)
+        writer.add_scalar('AP/{}'.format(class_list[cls_id + 1]), aps[cls_id], epoch_id)
 
     if latest_ap > best_ap:
         best_ap = latest_ap
         print("Saving the best model...")
         torch.save(model.state_dict(), os.path.join(model_save_dir, "[{}]model_best.pth".format(name)))
 
-    # check cache dir
-    if not os.path.exists(cache_save_dir):
-        os.mkdir(cache_save_dir)
-    if not os.path.exists(os.path.join(cache_save_dir, name)):
-        os.mkdir(os.path.join(cache_save_dir, name))
-
     # Cache the model data
     print("Caching the model data...")
-    torch.save(model.state_dict(), os.path.join(cache_save_dir, name, "model.cache"))
+    torch.save(model.state_dict(), os.path.join(cache_save_dir, "model.cache"))
     # Cache the optimizer
     print("Caching the optimizer...")
-    torch.save(optimizer.state_dict(), os.path.join(cache_save_dir, name, "optimizer.cache"))
+    torch.save(optimizer.state_dict(), os.path.join(cache_save_dir, "optimizer.cache"))
     # Cache the AP data
     print("Caching the basic data...")
-    with open(os.path.join(cache_save_dir, name, "basic.cache"), "wb") as f:
+    with open(os.path.join(cache_save_dir, "basic.cache"), "wb") as f:
         pickle.dump((best_ap, latest_ap, epoch_id, batch_id), f)
 
 
