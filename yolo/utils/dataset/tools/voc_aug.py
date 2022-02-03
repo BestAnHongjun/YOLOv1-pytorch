@@ -268,17 +268,24 @@ class voc_aug:
 
 
 def test_voc_aug(filename):
-    from yolo.utils.dataset.voc import VOC_CLASS
-    from yolo.utils.dataset.transfrom.voc2vdict import voc2vdict
-    from yolo.utils.dataset.tools.viz_bbox import viz_vdict
+    import os
+    import json
+
     import matplotlib.pyplot as plt
+
+    from yolo.config import PROJECT_DIR
+    from yolo.utils.dataset.transfrom.voc2vdict import voc2vdict
+    from yolo.utils.viz_bbox import viz_vdict
+
+    with open(os.path.join(PROJECT_DIR, "tools", "config", "class.cfg.json"), "r") as json_file:
+        class_list = json.load(json_file).get("class-list")
 
     transform = voc2vdict()
     augmentation = voc_aug()
 
     xml_file_path = r"E:\dataset\PASCAL_VOC\VOC_2007_trainval\Annotations\{}.xml".format(filename)
     image_file_path = r"E:\dataset\PASCAL_VOC\VOC_2007_trainval\JPEGImages\{}.jpg".format(filename)
-    vdict = transform(xml_file_path, image_file_path, VOC_CLASS)
+    vdict = transform(xml_file_path, image_file_path, class_list)
 
     plt.figure(figsize=(15, 10))
 

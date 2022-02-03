@@ -86,7 +86,7 @@ class Evaluator:
 
         # initialize attributes
         self.cache_file_path = os.path.join(self.cache_dir, 'annots.pkl')
-        self.anno_path = os.path.join(self.dataset_dir, "Annotations", "{:s}.xml")
+        self.anno_path = os.path.join(self.dataset_dir, "Annotations")
         self.use_07_metric = use_07_metric
 
         self.clear_results()
@@ -117,10 +117,7 @@ class Evaluator:
             if cls == '__background__':
                 continue
 
-            det_file_path = self.det_file_paths[i]
-
             rec, prec, ap = self.__voc_eval(  # 调用voc_eval.py计算cls类的recall precision ap
-                det_path=det_file_path,
                 anno_path=self.anno_path,
                 class_name=cls,
                 ovthresh=0,
@@ -134,7 +131,6 @@ class Evaluator:
         return m_ap, aps, recs, precs
 
     def __voc_eval(self,
-                   det_path,
                    anno_path,
                    class_name,
                    ovthresh=0.5,
@@ -169,7 +165,7 @@ class Evaluator:
             # load annots
             recs = {}
             for i, imagename in enumerate(imagenames):
-                recs[imagename] = self.__parse_rec(anno_path.format(imagename))
+                recs[imagename] = self.__parse_rec(os.path.join(anno_path, "{}.xml".format(imagename)))
                 if i % 100 == 0:
                     print('Reading annotation for {:d}/{:d}'.format(
                         i + 1, len(imagenames)))

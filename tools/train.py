@@ -5,167 +5,206 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 """
 
 import os
-import os.path
+import json
+import pickle
+import argparse
+
 import torch
-from yolo.model.VGG_YOLOv1 import VGG_YOLOv1
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from yolo.utils.loss import YOLO_LOSS
-from yolo.utils.dataset.voc import VOC_DATASET, VOC_CLASS
-from yolo.utils.dataset.tools.voc_eval import Evaluator
+
+from yolo.config import PROJECT_DIR, YOLO_MODEL, YOLO_DEVICE, YOLO_LOSS
+from yolo.utils.parse_predict import predict2vdict
+from yolo.utils.parse_cfg_json import parse_dataset, parse_data_loader, parse_evaluator
 
 
-train_dataset = VOC_DATASET(
-    dataset_dir=r"E:\dataset\PASCAL_VOC\VOC_2007_trainval",
-    txt_file_name="trainval",
-    augmentation=True
-)
-eval_dataset = VOC_DATASET(
-    dataset_dir=r"E:\dataset\PASCAL_VOC\VOC_2007_test",
-    txt_file_name="test",
-    augmentation=False
-)
-
-batch_size = 8
-epoch_n = 105
-batch_n_train = train_dataset.__len__() // batch_size
-batch_n_eval = eval_dataset.__len__() // batch_size
-
-train_DataLoader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True)
-eval_DataLoader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False, drop_last=True)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-YOLO_net = VGG_YOLOv1().to(device)
-loss_func = YOLO_LOSS(device)
-
-model_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../yolo/model", "autosave")
-log_save_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../log")
-cache_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../cache")
-writer = SummaryWriter(log_dir=log_save_dir)
-n = 0
-
-
-def train_one_epoch(model, epoch, optimizer, evaluator, best_ap, latesd_ap):
-    global n
+def train_one_epoch(model, name, optimizer, evaluator, writer):
+    """
+    train one epoch and eval one epoch
+    """
+    global class_list
+    global epoch_id, batch_id
+    global best_ap, latest_ap
+    global batch_n_train, batch_n_eval
+    global model_save_dir, log_save_dir
+    global train_data_loader, eval_data_loader
 
     # train
     model.train()
-    for batch, (source, target) in enumerate(train_DataLoader):
-        n += 1
-        source = source.to(device)
-        target = target.to(device)
+    for batch, (source, target) in enumerate(train_data_loader):
+        source = source.to(YOLO_DEVICE)
+        target = target.to(YOLO_DEVICE)
         predict = model(source)
 
         optimizer.zero_grad()
-        loss = loss_func(predict, target)
+        loss = YOLO_LOSS(predict, target)
         loss.backward()
         optimizer.step()
 
-        print("[best mAP:{:.4f} latest mAP:{:.4f}] Train Epoch:{}/{} Batch:{}/{} Loss:{:5f}".format(
-            best_ap,
-            latesd_ap,
-            epoch,
-            epoch_n,
-            batch,
-            batch_n_train,
-            loss.item()
-        ))
-        writer.add_scalar('Train/Loss', loss.item(), n)
-
-    # saving latest model
-    print("Saving latest model...")
-    torch.save(YOLO_net.state_dict(), os.path.join(model_save_dir, "model_latest.pth"))
+        format_str = "[{}] [best-mAP:{:.4f} | latest-mAP:{:.4f}] Train Epoch:{} Batch:{}/{} Loss:{:5f}"
+        print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_train, loss.item()))
+        writer.add_scalar('{}/Global/Loss (train)', name, loss.item(), batch_id)
 
     # eval
     model.eval()
     evaluator.clear_results()
-    grid_size = 448 / 7
-    for batch, (source, target) in enumerate(eval_DataLoader):
-        source = source.to(device)
+
+    for batch, (source, target) in enumerate(eval_data_loader):
+        source = source.to(YOLO_DEVICE)
         predict = model(source)
 
-        for bid in range(batch_size):
-            filename = "{:06d}".format(int(target[bid, 0, 0, 5]))
-            w = int(target[bid, 0, 0, 6])
-            h = int(target[bid, 0, 0, 7])
+        local_batch_size = int(source.shape[0])
+        filename_list = ["{:06d}".format(int(target[bid, 0, 0, 5])) for bid in range(local_batch_size)]
+        src_shape_list = [(int(target[bid, 0, 0, 6]), int(target[bid, 0, 0, 7])) for bid in range(local_batch_size)]
 
-            fh = h / 448.0
-            fw = w / 448.0
+        result_vdict_list = predict2vdict(predict, filename_list, src_shape_list)
 
-            for grid_i in range(7):
-                for grid_j in range(7):
-                    # 找置信概率较大的框
-                    if predict[bid, grid_i, grid_j, 4] > predict[bid, grid_i, grid_j, 9]:
-                        confidence_pre = predict[bid, grid_i, grid_j, 4]
-                        coordinate_pre = predict[bid, grid_i, grid_j, 0:4]
-                    else:
-                        confidence_pre = predict[bid, grid_i, grid_j, 9]
-                        coordinate_pre = predict[bid, grid_i, grid_j, 5:9]
-                    class_tensor = predict[bid, grid_i, grid_j, 10:20].unsqueeze(0)
+        for result_vdict in result_vdict_list:
+            filename = result_vdict.get("filename")
+            for object in result_vdict.get("objects"):
+                cls_id = object.get("class_id")
+                confidence = object.get("confidence")
+                x_min, y_min, x_max, y_max = object.get("bbox")
+                evaluator.add_result(int(cls_id), filename, confidence, x_min, y_min, x_max, y_max)
 
-                    class_id = torch.argmax(class_tensor, dim=1)
-                    confidence = predict[bid, grid_i, grid_j, 10 + class_id[0]] * confidence_pre
+        format_str = "[{}] [best-mAP:{:.4f} | latest-mAP:{:.4f}] Eval Epoch:{} Batch:{}/{} ..."
+        print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_eval))
 
-                    cx_pre = coordinate_pre[0] * grid_size + grid_j * grid_size
-                    cy_pre = coordinate_pre[1] * grid_size + grid_i * grid_size
-                    w_pre = coordinate_pre[2] * 448
-                    h_pre = coordinate_pre[3] * 448
-
-                    x_min = max(int((cx_pre - w_pre / 2) * fw), 0)
-                    y_min = max(int((cy_pre - h_pre / 2) * fh), 0)
-                    x_max = min(int((cx_pre + w_pre / 2) * fw), w - 1)
-                    y_max = min(int((cy_pre + h_pre / 2) * fh), h - 1)
-
-                    evaluator.add_result(int(class_id), filename, confidence, x_min, y_min, x_max, y_max)
-
-        print("[best mAP:{:.4f} latest mAP:{:.4f}] Eval Epoch:{}/{} Batch:{}/{} ...".format(
-            best_ap,
-            latesd_ap,
-            epoch,
-            epoch_n,
-            batch,
-            batch_n_eval
-        ))
-
-    m_ap, aps, recs, precs = evaluator.eval()
-    writer.add_scalar('mAP', m_ap, epoch)
+    latest_ap, aps, recs, precs = evaluator.eval()
+    writer.add_scalar('{}/Global/mAP (eval)', name, latest_ap, epoch_id)
     for cls_id in range(len(aps)):
-        writer.add_scalar('AP/{}'.format(VOC_CLASS[cls_id + 1]), aps[cls_id], epoch)
+        writer.add_scalar('{}/AP/{}'.format(name, class_list[cls_id + 1]), aps[cls_id], epoch_id)
 
-    if m_ap > best_ap:
-        best_ap = m_ap
-        print("Saving best model...")
-        torch.save(YOLO_net.state_dict(), os.path.join(model_save_dir, "model_best.pth"))
+    if latest_ap > best_ap:
+        best_ap = latest_ap
+        print("Saving the best model...")
+        torch.save(model.state_dict(), os.path.join(model_save_dir, "[{}]model_best.pth".format(name)))
 
-    return best_ap, m_ap
+    # check cache dir
+    if not os.path.exists(cache_save_dir):
+        os.mkdir(cache_save_dir)
+    if not os.path.exists(os.path.join(cache_save_dir, name)):
+        os.mkdir(os.path.join(cache_save_dir, name))
+
+    # Cache the model data
+    print("Caching the model data...")
+    torch.save(model.state_dict(), os.path.join(cache_save_dir, name, "model.cache"))
+    # Cache the optimizer
+    print("Caching the optimizer...")
+    torch.save(optimizer.state_dict(), os.path.join(cache_save_dir, name, "optimizer.cache"))
+    # Cache the AP data
+    print("Caching the basic data...")
+    with open(os.path.join(cache_save_dir, name, "basic.cache"), "wb") as f:
+        pickle.dump((best_ap, latest_ap, epoch_id, batch_id), f)
 
 
-def train():
-    evaluator = Evaluator(
-        dataset_dir=r"E:\dataset\PASCAL_VOC\VOC_2007_test",
-        txt_file_name="test",
-        voc_class_list=VOC_CLASS,
-        cache_dir=cache_dir,
-        use_07_metric=True
+def train(train_cfg_name, class_cfg_name):
+    # read class list
+    global class_list
+    with open(os.path.join(PROJECT_DIR, "tools", "config", "{}.cfg.json".format(class_cfg_name)), "r") as json_file:
+        class_list = json.load(json_file).get("class-list")
+
+    # read offline config
+    with open(os.path.join(PROJECT_DIR, "tools", "config", "{}.cfg.json".format(train_cfg_name)), "r") as json_file:
+        train_config = json.load(json_file)
+    train_config_offline = train_config.get("offline-config")
+    train_config_online = train_config.get("online-config")
+
+    # name
+    name = train_config_offline.get("name")
+
+    # dataset
+    train_dataset = parse_dataset(train_config_offline.get("dataset").get("train"), class_list)
+    eval_dataset = parse_dataset(train_config_offline.get("dataset").get("eval"), class_list)
+
+    # data loader
+    global batch_n_train, batch_n_eval
+    global train_data_loader, eval_data_loader
+    train_data_loader = parse_data_loader(train_config_offline.get("data-loader").get("train"), train_dataset)
+    eval_data_loader = parse_data_loader(train_config_offline.get("data-loader").get("eval"), eval_dataset)
+    batch_n_train = train_dataset.__len__() // train_config_offline.get("data-loader").get("train").get("batch-size")
+    batch_n_eval = eval_dataset.__len__() // train_config_offline.get("data-loader").get("eval").get("batch-size")
+
+    # initialize dir
+    global model_save_dir, log_save_dir, cache_save_dir
+    model_save_dir = train_config_offline.get("model-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
+    log_save_dir = train_config_offline.get("log-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
+    cache_save_dir = train_config_offline.get("cache-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
+
+    # evaluator
+    evaluator = parse_evaluator(train_config_offline.get("dataset").get("eval"), class_list, cache_save_dir)
+
+    # log writer
+    writer = SummaryWriter(log_dir=log_save_dir)
+
+    # initialize
+    optimizer_history_cfg = train_config_online.get("optimizer")
+    optimizer = torch.optim.SGD(
+        YOLO_MODEL.parameters(),
+        lr=optimizer_history_cfg.get("lr"),
+        momentum=optimizer_history_cfg.get("momentum"),
+        weight_decay=optimizer_history_cfg.get("weight-decay")
     )
-    best_ap = 0.0
-    latest_ap = 0.0
 
-    optimizer = torch.optim.SGD(YOLO_net.parameters(), lr=5e-3, momentum=0.9, weight_decay=5e-4)
-    for epoch in range(1):
-        best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
+    # use pre-trained model
+    if train_config.get("use-pre-trained-model").get("enable"):
+        model_path = train_config.get("use-pre-trained-model").get("model-path").replace("{PROJECT_DIR}", PROJECT_DIR)
+        YOLO_MODEL.load_state_dict(torch.load(model_path))
 
-    optimizer = torch.optim.SGD(YOLO_net.parameters(), lr=1e-2, momentum=0.9, weight_decay=5e-4)
-    for epoch in range(1, 400):
-        best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
+    # checkpoint-recovery
+    global best_ap, latest_ap, epoch_id, batch_id
+    if train_config.get("checkpoint-recovery"):
+        print("Run checkpoint recovery...")
+        if os.path.exists(os.path.join(cache_save_dir, "model.cache")):
+            print("Recovering model...")
+            YOLO_MODEL.load_state_dict(torch.load(os.path.join(cache_save_dir, "model.cache")))
+        if os.path.exists(os.path.join(cache_save_dir, "optimizer.cache")):
+            print("Recovering optimizer...")
+            optimizer.load_state_dict(torch.load(os.path.join(cache_save_dir, "optimizer.cache")))
+        if os.path.exists(os.path.join(cache_save_dir, "ap.cache")):
+            print("Recovering basic data...")
+            with open(os.path.join(cache_save_dir, "basic.cache"), "rb") as f:
+                best_ap, latest_ap, epoch_id, batch_id = pickle.load(f)
 
-    optimizer = torch.optim.SGD(YOLO_net.parameters(), lr=1e-4, momentum=0.9, weight_decay=5e-4)
-    for epoch in range(400, 500):
-        best_ap, latest_ap = train_one_epoch(YOLO_net, epoch, optimizer, evaluator, best_ap, latest_ap)
+    while True:
+        epoch_id += 1
+
+        # read online config
+        with open(os.path.join(PROJECT_DIR, "tools", "config", "train.cfg.json"), "r") as json_file:
+            train_config_online = json.load(json_file).get("online-config")
+
+        optimizer_cfg = train_config_online.get("optimizer")
+        if optimizer_cfg != optimizer_history_cfg:
+            optimizer = torch.optim.SGD(
+                YOLO_MODEL.parameters(),
+                lr=optimizer_cfg.get("lr"),
+                momentum=optimizer_cfg.get("momentum"),
+                weight_decay=optimizer_cfg.get("weight-decay")
+            )
+
+        train_one_epoch(YOLO_MODEL, name, optimizer, evaluator, writer)
+
+
+best_ap = 0.0
+latest_ap = 0.0
+batch_n_train = 0
+batch_n_eval = 0
+model_save_dir = ""
+log_save_dir = ""
+cache_save_dir = ""
+class_list = []
+train_data_loader = []
+eval_data_loader = []
+epoch_id = 0
+batch_id = 0
+
+
+def make_parser():
+    parser = argparse.ArgumentParser("YOLO trainer")
+    parser.add_argument("-t", "--train_cfg", type=str, default="train")
+    parser.add_argument("-c", "--class_cfg", type=str, default="class")
+    return parser
 
 
 if __name__ == "__main__":
-    train()
-
-
-
-
+    args = vars(make_parser().parse_args())
+    train(args.get("train_cfg"), args.get("class_cfg"))

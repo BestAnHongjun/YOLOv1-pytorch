@@ -1,0 +1,47 @@
+{
+  "use-pre-trained-model": {
+    "enable": false,
+    "model-path": "{PROJECT_DIR}/yolo/model/model.pth"
+  },
+  "checkpoint-recovery": true,
+  "online-config": {
+    "optimizer": {
+      "lr": 5e-3,
+      "momentum": 0.9,
+      "weight-decay": 5e-4
+    }
+  },
+  "offline-config": {
+    "name": "ResNet-YOLOv1",
+    "model-save-dir": "{PROJECT_DIR}/yolo/model/pth",
+    "log-save-dir": "{PROJECT_DIR}/log",
+    "cache-save-dir": "{PROJECT_DIR}/cache",
+    "dataset": {
+      "train": {
+        "type": "voc",
+        "dir-path": "E:\\dataset\\PASCAL_VOC\\VOC_2007_trainval",
+        "txt-file-name": "trainval",
+        "augmentation": true
+      },
+      "eval": {
+        "type": "voc",
+        "dir-path": "E:\\dataset\\PASCAL_VOC\\VOC_2007_test",
+        "txt-file-name": "test",
+        "augmentation": false,
+        "use-07-metric": true
+      }
+    },
+    "data-loader": {
+      "train": {
+        "batch-size": 8,
+        "shuffle": true,
+        "drop-last": true
+      },
+      "eval": {
+        "batch-size": 8,
+        "shuffle": true,
+        "drop-last": true
+      }
+    }
+  }
+}

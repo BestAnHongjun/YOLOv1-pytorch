@@ -12,35 +12,10 @@ sys.path.append(PROJECT_ROOT)
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from yolo.utils.dataset.tools.viz_bbox import viz_yolo_ground_truth
+from yolo.utils.viz_bbox import viz_yolo_ground_truth
 from yolo.utils.dataset.transfrom.voc2vdict import voc2vdict
 from yolo.utils.dataset.transfrom.vdict2yolo import vdict2yolo_v1
 from yolo.utils.dataset.tools.voc_aug import voc_aug
-
-
-VOC_CLASS = [
-    '__background__',
-    'chair',
-    'car',
-    'horse',
-    'person',
-    'bicycle',
-    'cat',
-    'dog',
-    'train',
-    'aeroplane',
-    'diningtable',
-    'tvmonitor',
-    'bird',
-    'bottle',
-    'motorbike',
-    'pottedplant',
-    'boat',
-    'sofa',
-    'sheep',
-    'cow',
-    'bus'
-]
 
 
 class VOC_DATASET(Dataset):
@@ -70,7 +45,7 @@ class VOC_DATASET(Dataset):
     def __init__(self,
                  dataset_dir,
                  txt_file_name,
-                 class_list=None,
+                 class_list,
                  transform=vdict2yolo_v1(),
                  augmentation=False,
                  ):
@@ -81,10 +56,6 @@ class VOC_DATASET(Dataset):
         :param transform: Transform the default return format to satisfy your requirement.
         :param augmentation: Apply VOC augmentation
         """
-
-        # set default value
-        if class_list is None:
-            class_list = VOC_CLASS
 
         # check dataset_dir
         # assert os.path.isdir(dataset_dir)
@@ -172,19 +143,25 @@ class VOC_DATASET(Dataset):
 
 
 if __name__ == "__main__":
+    import json
     import matplotlib.pyplot as plt
+    from yolo.config import PROJECT_DIR
+
+    with open(os.path.join(PROJECT_DIR, "tools", "config", "class.cfg.json"), "r") as json_file:
+        class_list = json.load(json_file).get("class-list")
+
     voc_transform = vdict2yolo_v1()
     dataset = VOC_DATASET(
-        r"E:\dataset\PASCAL_VOC\VOC_2007_trainval",
-        txt_file_name="trainval",
-        class_list=VOC_CLASS,
+        r"E:\dataset\PASCAL_VOC\VOC_2007_test",
+        txt_file_name="test",
+        class_list=class_list,
         transform=voc_transform,
         augmentation=True
     )
 
     train_DataLoader = DataLoader(dataset, batch_size=1, shuffle=True)
     for batch_id, (x, y) in enumerate(train_DataLoader):
-        src_image, res_image = viz_yolo_ground_truth(x[0], y[0], VOC_CLASS)
+        src_image, res_image = viz_yolo_ground_truth(x[0], y[0], class_list)
 
         plt.figure(figsize=(15, 10))
 

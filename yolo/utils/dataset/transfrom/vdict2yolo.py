@@ -10,7 +10,7 @@ import torch
 
 class vdict2yolo_v1:
     """
-    A transform which can convert VOC annotation(by voc.py) to yolo format
+    A transform which can convert VOC-dict to yolo format
     """
 
     def __init__(self, grid_num=7, input_size=448):

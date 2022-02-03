@@ -1,0 +1,25 @@
+{
+  "class-list": [
+    "__background__",
+    "chair",
+    "car",
+    "horse",
+    "person",
+    "bicycle",
+    "cat",
+    "dog",
+    "train",
+    "aeroplane",
+    "diningtable",
+    "tvmonitor",
+    "bird",
+    "bottle",
+    "motorbike",
+    "pottedplant",
+    "boat",
+    "sofa",
+    "sheep",
+    "cow",
+    "bus"
+  ]
+}

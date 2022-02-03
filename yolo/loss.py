@@ -6,12 +6,12 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 
 import torch
 import torch.nn as nn
-from yolo.utils.IOU import iou
+from yolo.IOU import iou
 
 
-class YOLO_LOSS(nn.Module):
+class YOLOv1_LOSS(nn.Module):
     def __init__(self, device, grid_num=7, img_size=448, lambda_coord=5, lambda_noobj=0.5):
-        super(YOLO_LOSS, self).__init__()
+        super(YOLOv1_LOSS, self).__init__()
         self.device = device
         self.grid_num = grid_num
         self.img_size = img_size
@@ -100,7 +100,7 @@ class YOLO_LOSS(nn.Module):
 def test_loss():
     y_pre = torch.zeros((5, 7, 7, 30))
     y_true = torch.zeros((5, 7, 7, 8))
-    loss_func = YOLO_LOSS(device=torch.device("cpu"))
+    loss_func = YOLOv1_LOSS(device=torch.device("cpu"))
     loss = loss_func(y_pre, y_true)
     print(loss.item())
 

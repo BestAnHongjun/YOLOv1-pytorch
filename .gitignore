@@ -1,3 +1,6 @@
-.idea/*
-cache/*
+.idea/
+cache/results/
+log/
+*__pycache__*
 *.pth
+*.cache
