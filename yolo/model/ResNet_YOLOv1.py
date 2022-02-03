@@ -54,7 +54,7 @@ class ResNet_YOLOv1(nn.Module):
 
         self.fc2 = nn.Sequential(
             nn.Linear(in_features=4096, out_features=30 * 7 * 7),
-            nn.Sigmoid()
+            nn.ReLU()
         )
 
     def forward(self, x):

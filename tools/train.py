@@ -42,7 +42,7 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
 
         format_str = "[{}] [best-mAP:{:.4f} | latest-mAP:{:.4f}] Train Epoch:{} Batch:{}/{} Loss:{:5f}"
         print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_train, loss.item()))
-        writer.add_scalar('{}/Global/Loss (train)', name, loss.item(), batch_id)
+        writer.add_scalar('{}/Global/Loss (train)'.format(name), loss.item(), batch_id)
 
     # eval
     model.eval()
@@ -70,7 +70,7 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
         print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_eval))
 
     latest_ap, aps, recs, precs = evaluator.eval()
-    writer.add_scalar('{}/Global/mAP (eval)', name, latest_ap, epoch_id)
+    writer.add_scalar('{}/Global/mAP (eval)'.format(name), latest_ap, epoch_id)
     for cls_id in range(len(aps)):
         writer.add_scalar('{}/AP/{}'.format(name, class_list[cls_id + 1]), aps[cls_id], epoch_id)
 
