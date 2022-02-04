@@ -5,12 +5,16 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 """
 
 import os
+import sys
 import json
 import pickle
 import argparse
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
+
+PROJECT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+sys.path.append(PROJECT_DIR)
 
 from yolo.config import PROJECT_DIR, YOLO_MODEL, YOLO_DEVICE, YOLO_LOSS
 from yolo.utils.parse_predict import predict2vdict
