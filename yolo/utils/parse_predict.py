@@ -7,11 +7,13 @@ Github: https://github.com/BestAnHongjun/YOLOv1-pytorch
 import torch
 
 
-def predict2vdict(predict, filename_list, src_shape_list):
+def predict2vdict(predict, filename_list, src_shape_list, threshold=0, class_list=None):
     """
     :param predict: Tensor, yolo output, [batch_size, c, h, w]
     :param filename_list: A list of filename with length of batch_size
     :param src_shape_list: A list of image shape with length of batch_size
+    :param threshold: Threshold of confidence
+    :param class_list: A list contains classes of dataset
     :return: A list of vdict with length of batch_size
     """
 
@@ -41,10 +43,17 @@ def predict2vdict(predict, filename_list, src_shape_list):
                 else:
                     confidence_pre = predict[bid, grid_i, grid_j, 9]
                     coordinate_pre = predict[bid, grid_i, grid_j, 5:9]
-                class_tensor = predict[bid, grid_i, grid_j, 10:20].unsqueeze(0)
+
+                # I can fuck this statement billions of years!!!!
+                # class_tensor = predict[bid, grid_i, grid_j, 10:20].unsqueeze(0)
+
+                class_tensor = predict[bid, grid_i, grid_j, 10:].unsqueeze(0)
 
                 class_id = torch.argmax(class_tensor, dim=1)
-                confidence = predict[bid, grid_i, grid_j, 10 + class_id[0]] * confidence_pre
+                confidence = class_tensor[class_id[0]] * confidence_pre
+
+                if confidence < threshold:
+                    continue
 
                 cx_pre = coordinate_pre[0] * grid_size + grid_j * grid_size
                 cy_pre = coordinate_pre[1] * grid_size + grid_i * grid_size
@@ -56,11 +65,13 @@ def predict2vdict(predict, filename_list, src_shape_list):
                 x_max = min(int((cx_pre + w_pre / 2) * fw), w - 1)
                 y_max = min(int((cy_pre + h_pre / 2) * fh), h - 1)
 
-                object = dict()
-                object["class_id"] = int(class_id.item())
-                object["confidence"] = float(confidence.item())
-                object["bbox"] = (x_min, y_min, x_max, y_max)
-                vdict["objects"].append(object)
+                obj = dict()
+                obj["class_id"] = int(class_id.item()) + 1
+                if class_list is not None:
+                    obj["class_name"] = class_list[obj.get("class_id")]
+                obj["confidence"] = float(confidence.item())
+                obj["bbox"] = (x_min, y_min, x_max, y_max)
+                vdict["objects"].append(obj)
 
         res.append(vdict)
 

@@ -33,12 +33,12 @@
     },
     "data-loader": {
       "train": {
-        "batch-size": 8,
+        "batch-size": 4,
         "shuffle": true,
         "drop-last": true
       },
       "eval": {
-        "batch-size": 8,
+        "batch-size": 4,
         "shuffle": true,
         "drop-last": true
       }

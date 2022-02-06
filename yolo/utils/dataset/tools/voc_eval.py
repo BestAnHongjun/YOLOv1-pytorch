@@ -99,7 +99,7 @@ class Evaluator:
                 f.write("")
 
     def add_result(self, cls_id, filename, pro, x_min, y_min, x_max, y_max):
-        with open(self.det_file_paths[cls_id + 1], "a") as f:
+        with open(self.det_file_paths[cls_id], "a") as f:
             f.write(f"{filename} {pro} {x_min} {y_min} {x_max} {y_max}\n".format(
                 filename=filename,
                 pro=pro,

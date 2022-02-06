@@ -13,11 +13,15 @@ import cv2
 import numpy as np
 
 
-def viz_vdict(annotation):
-    image = annotation.get("image").copy()
-    objects = annotation.get("objects")
+def viz_vdict(vdict):
+    image = vdict.get("image").copy()
+    objects = vdict.get("objects")
     for obj in objects:
-        __viz_bbox(image, obj.get("bbox"), obj.get("class_id"), obj.get("class_name"))
+        if "confidence" in obj:
+            confidence = obj.get("confidence")
+        else:
+            confidence = -1
+        __viz_bbox(image, obj.get("bbox"), obj.get("class_id"), obj.get("class_name"), confidence)
     return image
 
 
@@ -56,10 +60,13 @@ def viz_yolo_ground_truth(source, target, voc_class_list):
     return src_image, res_image
 
 
-def __viz_bbox(image, bbox, cls_id, cls_name):
+def __viz_bbox(image, bbox, cls_id, cls_name, confidence=-1):
     x_min, y_min, x_max, y_max = bbox
     color = (_COLORS[cls_id] * 255).astype(np.uint8).tolist()
-    text = '{}'.format(cls_name)
+    if confidence == -1:
+        text = '{}'.format(cls_name)
+    else:
+        text = '{}:{:.2f}%'.format(cls_name, confidence * 100)
     txt_color = (0, 0, 0) if np.mean(_COLORS[cls_id]) > 0.5 else (255, 255, 255)
     font = cv2.FONT_HERSHEY_SIMPLEX
 

@@ -152,15 +152,17 @@ if __name__ == "__main__":
 
     voc_transform = vdict2yolo_v1()
     dataset = VOC_DATASET(
-        r"E:\dataset\PASCAL_VOC\VOC_2007_test",
-        txt_file_name="test",
+        r"E:\dataset\PASCAL_VOC\VOC_2007_trainval",
+        txt_file_name="trainval",
         class_list=class_list,
         transform=voc_transform,
         augmentation=True
     )
 
-    train_DataLoader = DataLoader(dataset, batch_size=1, shuffle=True)
+    train_DataLoader = DataLoader(dataset, batch_size=64, shuffle=True)
     for batch_id, (x, y) in enumerate(train_DataLoader):
+        print(batch_id)
+
         src_image, res_image = viz_yolo_ground_truth(x[0], y[0], class_list)
 
         plt.figure(figsize=(15, 10))

@@ -76,20 +76,20 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
     latest_ap, aps, recs, precs = evaluator.eval()
     writer.add_scalar('Global/mAP (eval)', latest_ap, epoch_id)
     for cls_id in range(len(aps)):
-        writer.add_scalar('AP/{}'.format(class_list[cls_id + 1]), aps[cls_id], epoch_id)
+        writer.add_scalar('AP/{}'.format(class_list[cls_id]), aps[cls_id], epoch_id)
 
     if latest_ap > best_ap:
         best_ap = latest_ap
         print("Saving the best model...")
         torch.save(model.state_dict(), os.path.join(model_save_dir, "[{}]model_best.pth".format(name)))
 
-    # Cache the model data
+    # Cache the model data for recovery
     print("Caching the model data...")
     torch.save(model.state_dict(), os.path.join(cache_save_dir, "model.cache"))
-    # Cache the optimizer
+    # Cache the optimizer for recovery
     print("Caching the optimizer...")
     torch.save(optimizer.state_dict(), os.path.join(cache_save_dir, "optimizer.cache"))
-    # Cache the AP data
+    # Cache the AP data for recovery
     print("Caching the basic data...")
     with open(os.path.join(cache_save_dir, "basic.cache"), "wb") as f:
         pickle.dump((best_ap, latest_ap, epoch_id, batch_id), f)
@@ -158,7 +158,7 @@ def train(train_cfg_name, class_cfg_name):
         if os.path.exists(os.path.join(cache_save_dir, "optimizer.cache")):
             print("Recovering optimizer...")
             optimizer.load_state_dict(torch.load(os.path.join(cache_save_dir, "optimizer.cache")))
-        if os.path.exists(os.path.join(cache_save_dir, "ap.cache")):
+        if os.path.exists(os.path.join(cache_save_dir, "basic.cache")):
             print("Recovering basic data...")
             with open(os.path.join(cache_save_dir, "basic.cache"), "rb") as f:
                 best_ap, latest_ap, epoch_id, batch_id = pickle.load(f)
