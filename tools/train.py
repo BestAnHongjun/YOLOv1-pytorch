@@ -78,7 +78,7 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
     latest_ap, aps, recs, precs = evaluator.eval()
     writer.add_scalar('Global/mAP (eval)', latest_ap, epoch_id)
     for cls_id in range(len(aps)):
-        writer.add_scalar('AP/{}'.format(class_list[cls_id]), aps[cls_id], epoch_id)
+        writer.add_scalar('AP/{}'.format(class_list[cls_id + 1]), aps[cls_id], epoch_id)
 
     if latest_ap > best_ap:
         best_ap = latest_ap
@@ -129,6 +129,12 @@ def train(train_cfg_name, class_cfg_name):
     model_save_dir = train_config_offline.get("model-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
     log_save_dir = train_config_offline.get("log-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
     cache_save_dir = train_config_offline.get("cache-save-dir").replace("{PROJECT_DIR}", PROJECT_DIR)
+    if not os.path.exists(model_save_dir):
+        os.mkdir(model_save_dir)
+    if not os.path.exists(log_save_dir):
+        os.mkdir(log_save_dir)
+    if not os.path.exists(cache_save_dir):
+        os.mkdir(cache_save_dir)
 
     # evaluator
     evaluator = parse_evaluator(train_config_offline.get("dataset").get("eval"), class_list, cache_save_dir)

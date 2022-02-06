@@ -1,0 +1,6 @@
+{
+  "model-path": "{PROJECT_DIR}/yolo/model/pth/pre-trained-model.resnet18.pth",
+  "threshold": 0.2,
+  "mode": "image",
+  "mode-path": "E:\\dataset\\PASCAL_VOC\\VOC_2007_test\\JPEGImages\\000001.jpg"
+}

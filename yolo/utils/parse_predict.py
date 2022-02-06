@@ -50,7 +50,7 @@ def predict2vdict(predict, filename_list, src_shape_list, threshold=0, class_lis
                 class_tensor = predict[bid, grid_i, grid_j, 10:].unsqueeze(0)
 
                 class_id = torch.argmax(class_tensor, dim=1)
-                confidence = class_tensor[class_id[0]] * confidence_pre
+                confidence = class_tensor[0, class_id[0]] * confidence_pre
 
                 if confidence < threshold:
                     continue
