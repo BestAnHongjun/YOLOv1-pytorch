@@ -9,13 +9,13 @@ import torch.nn as nn
 import torchvision.models as models
 
 
-class VGG_YOLOv1(nn.Module):
+class ResNet18_YOLOv1(nn.Module):
     def __init__(self):
-        super(VGG_YOLOv1, self).__init__()
+        super(ResNet18_YOLOv1, self).__init__()
 
-        # Layer 1-4 (Use VGG-19 instead)
-        vgg19 = models.vgg19(pretrained=True)
-        self.feature = nn.Sequential(*list(vgg19.children())[:-2])
+        # Layer 1-4 (Use ResNet18 instead)
+        resnet18 = models.resnet18(pretrained=True)
+        self.feature = nn.Sequential(*list(resnet18.children())[:-2])
 
         # Layer 5
         self.layer_5 = nn.Sequential(
@@ -54,7 +54,7 @@ class VGG_YOLOv1(nn.Module):
 
         self.fc2 = nn.Sequential(
             nn.Linear(in_features=4096, out_features=30 * 7 * 7),
-            nn.Sigmoid()
+            nn.ReLU()
         )
 
     def forward(self, x):
@@ -68,7 +68,7 @@ class VGG_YOLOv1(nn.Module):
 
 
 def test_train():
-    model = VGG_YOLOv1()
+    model = ResNet18_YOLOv1()
 
     x = torch.zeros((1, 3, 448, 448))
     y_pre = model(x)

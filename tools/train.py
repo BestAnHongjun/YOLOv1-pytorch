@@ -53,6 +53,8 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
     evaluator.clear_results()
 
     for batch, (source, target) in enumerate(eval_data_loader):
+        batch_id += 1
+
         source = source.to(YOLO_DEVICE)
         predict = model(source)
 

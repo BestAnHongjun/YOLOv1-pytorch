@@ -8,12 +8,12 @@ import os
 import torch
 
 from yolo.loss import YOLOv1_LOSS
-from yolo.model.ResNet_YOLOv1 import ResNet_YOLOv1
+from yolo.model.ResNet18_YOLOv1 import ResNet18_YOLOv1
 
 # project dir
 PROJECT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 # YOLO basic config
 YOLO_DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-YOLO_MODEL = ResNet_YOLOv1().to(YOLO_DEVICE)
+YOLO_MODEL = ResNet18_YOLOv1().to(YOLO_DEVICE)
 YOLO_LOSS = YOLOv1_LOSS(YOLO_DEVICE)
