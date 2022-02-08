@@ -35,26 +35,25 @@ def train_one_epoch(model, name, optimizer, evaluator, writer):
     # train
     model.train()
     for batch, (source, target) in enumerate(train_data_loader):
+        batch_id += 1
+
         source = source.to(YOLO_DEVICE)
         target = target.to(YOLO_DEVICE)
         predict = model(source)
 
         optimizer.zero_grad()
-        loss = YOLO_LOSS(predict, target)
+        loss = YOLO_LOSS(predict, target, writer, batch_id)
         loss.backward()
         optimizer.step()
 
         format_str = "[{}] [best-mAP:{:.4f} | latest-mAP:{:.4f}] Train Epoch:{} Batch:{}/{} Loss:{:5f}"
         print(format_str.format(name, best_ap, latest_ap, epoch_id, batch + 1, batch_n_train, loss.item()))
-        writer.add_scalar('Global/Loss (train)', loss.item(), batch_id)
 
     # eval
     model.eval()
     evaluator.clear_results()
 
     for batch, (source, target) in enumerate(eval_data_loader):
-        batch_id += 1
-
         source = source.to(YOLO_DEVICE)
         predict = model(source)
 
