@@ -25,3 +25,7 @@ set and validated on the VOC-2012-test. It was the different training data and d
 model structure made the gaps.
 
 Here are some visual data of training process.
+
+| Loss      | mAP |
+| :---        |    :----:   |
+| <img src="doc/Global_Loss (train).svg" width="300" height="200"/> | <img src="doc/Global_mAP (eval).svg" width="300" height="200"/>      |
