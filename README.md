@@ -10,9 +10,9 @@ so I wrote this repo, YOLOv1 in pure pytorch. I'm going to
 write a simple and easy-to-use reproduction version of yolov1.
 
 ## Experimental Result
-To skip the pre-train process, I directly use ResNet-18 model pre-trained on 
-ImageNet-1000 dataset without the last two classify layer instead of the 
-first 20 layers in the original paper. See more details at 
+To skip the pre-train process, I directly use ResNet-18 model inside PyTorch 
+(pre-trained on ImageNet-1000 dataset) without the last two classify layers 
+instead of the first 20 layers in the original paper. See more details at 
 yolo.model.ResNet18_YOLOv1.
 
 Then I trained my model on the VOC-2007-trainval dataset and validated on the
