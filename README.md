@@ -34,6 +34,17 @@ The following sections are under preparation...
 
 ## Demo: Quick Start
 
+The part will guide you to detect a single image with my model.
+
+### 1. Create a virtual environment and activate it
+```shell
+conda create -n yolov1_pytorch python=3.7
+conda activate yolov1_pytorch
+```
+
+### 2. Install PyTorch environment
+
+
 ## Train & Eval
 
 ## API
